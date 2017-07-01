@@ -1,4 +1,4 @@
-  #!/usr/bin/env python
+#!/usr/bin/env python
 
 # Copyright (C) 2017 Electric Movement Inc.
 #
@@ -51,6 +51,7 @@ def handle_calculate_IK(req):
                 alpha6:     -pi/2, a6:           0, d6:      0,
                 alpha7:         0, a7:           0, d7:  0.303,  q7: 0}
 
+
             
             # Define Modified DH Transformation matrix
 
@@ -58,12 +59,59 @@ def handle_calculate_IK(req):
 
             # Create individual transformation matrices
 
+            # Transformation Matrix for 0 to 1
+            Tr0_1 = Matrix([[               cos(q1),                -sin(q1),            0,               a1],
+                            [    sin(q1)*cos(alpha1),    cos(q1)*cos(alpha1), -sin(alpha1),  -sin(alpha1)*d1],
+                            [    sin(q1)*sin(alpha1),    cos(q1)*sin(alpha1),  cos(alpha1),   cos(alpha1)*d1],
+                            [                      0,                      0,            0,                 1,]])
+            Tr0_1 = Tr0_1.subs(s)
 
+            # Transformation Matrix for 1 to 2
+            Tr1_2 = Matrix([[               cos(q2),                -sin(q2),            0,               a2],
+                            [    sin(q2)*cos(alpha2),    cos(q2)*cos(alpha2), -sin(alpha2),  -sin(alpha2)*d2],
+                            [    sin(q2)*sin(alpha2),    cos(q2)*sin(alpha2),  cos(alpha2),   cos(alpha2)*d2],
+                            [                      0,                      0,            0,                 1,]])   
+            Tr1_2 = Tr1_2.subs(s)
+            
+            # Transformation Matrix for 2 to 3        
+            Tr2_3 = Matrix([[               cos(q3),                -sin(q3),            0,               a3],
+                            [    sin(q3)*cos(alpha3),    cos(q3)*cos(alpha3), -sin(alpha3),  -sin(alpha3)*d3],
+                            [    sin(q3)*sin(alpha3),    cos(q3)*sin(alpha3),  cos(alpha3),   cos(alpha3)*d3],
+                            [                      0,                      0,            0,                 1,]])
+            Tr2_3 = Tr2_3.subs(s)
+
+            # Transformation Matrix for 3 to 4
+            Tr3_4 = Matrix([[                cos(q4),               -sin(q4),            0,               a4],
+                            [    sin(q4)*cos(alpha4),    cos(q4)*cos(alpha4), -sin(alpha4),  -sin(alpha4)*d4],
+                            [    sin(q4)*sin(alpha4),    cos(q4)*sin(alpha4),  cos(alpha4),   cos(alpha4)*d4],
+                            [                      0,                      0,            0,                 1,]]) 
+            Tr3_4 = Tr3_4.subs(s)
+
+            # Transfortmation Matrix for 4 to 5
+            Tr4_5 = Matrix([[                cos(q5),               -sin(q5),            0,               a5],
+                            [    sin(q5)*cos(alpha5),    cos(q5)*cos(alpha5), -sin(alpha5),  -sin(alpha5)*d5],
+                            [    sin(q5)*sin(alpha5),    cos(q5)*sin(alpha5),  cos(alpha5),   cos(alpha5)*d5],
+                            [                      0,                      0,            0,                 1,]])
+            Tr4_5 = Tr4_5.subs(s)
+
+            # Transformation Matrix for 5 to 6
+            Tr5_6 = Matrix([[                cos(q6),               -sin(q6),            0,               a6],
+                            [    sin(q6)*cos(alpha6),    cos(q6)*cos(alpha6), -sin(alpha6),  -sin(alpha6)*d6],
+                            [    sin(q6)*sin(alpha6),    cos(q6)*sin(alpha6),  cos(alpha6),   cos(alpha6)*d6],
+                            [                      0,                      0,            0,                 1,]])
+            Tr5_6 = Tr5_6.subs(s)
+
+            # Transformation Matrix for 6 to 7
+            Tr6_7 = Matrix([[                cos(q7),               -sin(q7),            0,               a7],
+                            [    sin(q7)*cos(alpha7),    cos(q7)*cos(alpha7), -sin(alpha7),  -sin(alpha7)*d7],
+                            [    sin(q7)*sin(alpha7),    cos(q7)*sin(alpha7),  cos(alpha7),   cos(alpha7)*d7],
+                            [                      0,                      0,            0,                 1,]])
+            Tr6_7 = Tr6_7.subs(s)                                 
             
             # Extract end-effector position and orientation from request
-	    # px,py,pz = end-effector position
-	    # roll, pitch, yaw = end-effector orientation
-            px = req.poses[x].position.x
+        # px,py,pz = end-effector position
+        # roll, pitch, yaw = end-effector orientation
+            px = req.poses[x].position.x 
             py = req.poses[x].position.y
             pz = req.poses[x].position.z
 
@@ -73,13 +121,13 @@ def handle_calculate_IK(req):
      
             # Calculate joint angles using Geometric IK method
 
-		
+        
 
 
             # Populate response for the IK request
             # In the next line replace theta1,theta2...,theta6 by your joint angle variables
-	    joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
-	    joint_trajectory_list.append(joint_trajectory_point)
+        joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
+        joint_trajectory_list.append(joint_trajectory_point)
 
         rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
         return CalculateIKResponse(joint_trajectory_list)
