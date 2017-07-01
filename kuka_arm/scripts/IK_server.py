@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+  #!/usr/bin/env python
 
 # Copyright (C) 2017 Electric Movement Inc.
 #
@@ -32,15 +32,24 @@ def handle_calculate_IK(req):
             joint_trajectory_point = JointTrajectoryPoint()
 
             # Define DH param symbols
-
+            q1, q2, q3, q4, q5, q6, q7 = symbols('q1:q8')
+            d1, d2, d3, d4, d5, d6, d7 = symbols('d1:d8')
 
             
             # Joint angle symbols
-
+            # Video started these at 0 for some reason so if shit breaks later try that
+            a1, a2, a3, a4, a5, a6, a7 = symbols('a1:a8')
+            alpha1, alpha2, alpha3, alpha4, alpha5, alpha6, alpha7 = symbols('alpha1:alpha8')
 
       
             # Modified DH params
-
+            s = {alpha1:        0, a1:           0, d1:   0.75,
+                alpha2:     -pi/2, a2:        0.35, d2:      0,    q2: q2 - pi/2,
+                alpha3:         0, a3:        1.25, d3:      0,
+                alpha4:     -pi/2, a4:      -0.054, d4:   1.50,
+                alpha5:      pi/2, a5:           0, d5:      0,
+                alpha6:     -pi/2, a6:           0, d6:      0,
+                alpha7:         0, a7:           0, d7:  0.303,  q7: 0}
 
             
             # Define Modified DH Transformation matrix
