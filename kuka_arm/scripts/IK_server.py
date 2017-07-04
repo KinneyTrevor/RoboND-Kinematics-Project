@@ -49,7 +49,7 @@ def handle_calculate_IK(req):
                 alpha4:     -pi/2, a4:      -0.054, d4:   1.50,
                 alpha5:      pi/2, a5:           0, d5:      0,
                 alpha6:     -pi/2, a6:           0, d6:      0,
-                alpha7:         0, a7:           0, d7:  0.303,  q7: 0}
+                alpha7:         0, a7:           0, d7:  0.303,             q7: 0}
 
 
             
@@ -142,6 +142,9 @@ def handle_calculate_IK(req):
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
      
             # Calculate joint angles using Geometric IK method
+            theta1 = atan2(px,pz)
+            theta2 = atan2((sqrt((px**2)+(pz**2))),(0.35-py))
+            theta3 = atan2(px,py)
 
         
 
