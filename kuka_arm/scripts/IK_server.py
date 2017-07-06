@@ -143,8 +143,29 @@ def handle_calculate_IK(req):
      
             # Calculate joint angles using Geometric IK method
             theta1 = atan2(px,pz)
-            theta2 = atan2((sqrt((px**2)+(pz**2))),(0.35-py))
-            theta3 = atan2(px,py)
+
+            R_C = sqrt((py**2)+(px**2)) # Lenght from origin to wrist center
+            L1 = 1.25 # Link lenght between joint 2 and 3
+            L2 = 1.50097 # Link length between joint 3 and wrist center
+            D1 = 0.35 # Distance between x axis and link 2
+            D2 = 0.75 # Distance between z axis and link 2
+            a1 = 0.09 # Link lenght between joint 1 and join 2
+            a2 = L1+L2 # This is probably wrong
+
+
+            #Set points to be on same plane
+            R_2 = R_C - D1
+            Z_2 = pz - D2
+
+            D2 = (px**2 + pz**2 - a1**2 - a2**2)/(2*a1*a2)
+            theta2 = atan2(D2, (1-D**2)**(1/2))
+
+            # uhh
+            D3 = (R_2**2 + Z_2**2 - L_1**2 - L_2**2)/(2 * L_1 * L_2)
+            theta3 = atan2((-sqrt(1-D3**2)),D3)
+
+
+
 
         
 
