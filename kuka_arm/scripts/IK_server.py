@@ -58,6 +58,9 @@ def handle_calculate_IK(req):
 
 
             # Create individual transformation matrices
+            for count in range(0,7):
+                evalMatrixFunction(count)
+                
 
             # Transformation Matrix for 0 to 1
             T0_1 = Matrix([[                 cos(q1),               -sin(q1),            0,               a1],
