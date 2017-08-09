@@ -58,9 +58,6 @@ def handle_calculate_IK(req):
 
 
             # Create individual transformation matrices
-            for count in range(0,7):
-                evalMatrixFunction(count)
-                
 
             # Transformation Matrix for 0 to 1
             T0_1 = Matrix([[                 cos(q1),               -sin(q1),            0,               a1],
@@ -129,6 +126,7 @@ def handle_calculate_IK(req):
             T0_4 = simplify(T0_3 * T3_4)
             T0_5 = simplify(T0_4 * T4_5)
             T0_6 = simplify(T0_5 * T5_6)
+            # 7 is end effector
             T0_7 = simplify(T0_7 * T6_7)
 
             T_total = simplify(T0_7 * R_corr)
@@ -143,29 +141,102 @@ def handle_calculate_IK(req):
             (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
-     
+
+
+            r, p, y = symbols('r p y')
+
+            # Roll
+            ROT_X_EE = Matrix([
+                [1,         0,            0],
+                [0,     cos(r),     -sin(r)],
+                [0,     sin(r),      cos(r)]
+                                ])
+
+            # Pitch
+            ROT_Y_EE = Matrix([
+                [ cos(p),    0,      sin(p)],
+                [      0,    1,           0],
+                [-sin(p),    0,      cos(p)]
+                                ])
+
+            # Yaw dude
+            ROT_Z_EE = Matrix([
+                [cos(y),    -sin(y),    0],
+                [sin(y),     cos(y),    0],
+                [     0,          0,    1]
+                                ])
+
+            # Multiply the rotation matrics
+            ROT_EE = ROT_Z_EE * ROT_Y_EE * ROT_X_EE
+
+            # Account for error, same as R_Corr above
+            Rot_err = ROT_Z_EE.subs(y, radians(180)) * ROT_Y_EE.subs(p, radians(90))
+
+            # Multiply
+            ROT_EE = ROT_EE * Rot_err
+
+            #Plug in them values
+            ROT_EE = ROT_EE.subs({'r': roll, 'p': pitch, 'y': yaw})
+
+            # End Effector
+            EE = Matrix([
+                [px],
+                [py],
+                [pz]
+                ])
+
+            # Wrist Center
+            Wr_C = EE - (0.303) * ROT_EE[:,2]
+
             # Calculate joint angles using Geometric IK method
-            theta1 = atan2(px,pz)
+            
+            # Trig stuff for solving for theta2 and theta3
+            side1 = 1.50097
+            side2 = sqrt(pow((sqrt(Wr_C[0] * Wr_C[0] * Wr_C[1]) - 0.35), 2) + pow((Wr_C[2] - 0.75), 2))
+            side3 = 1.25
 
-            R_C = sqrt((py**2)+(px**2)) # Lenght from origin to wrist center
-            L1 = 1.25 # Link lenght between joint 2 and 3
-            L2 = 1.50097 # Link length between joint 3 and wrist center
-            D1 = 0.35 # Distance between x axis and link 2
-            D2 = 0.75 # Distance between z axis and link 2
-            a1 = 0.09 # Link lenght between joint 1 and join 2
-            a2 = L1+L2 # This is probably wrong
+            angle1 = acos((side2**2 + side3**2 - side1**2) / (2 * side2 * side3))
+            angle2 = acos((side1**2 + side3**2 - side2**2) / (2 * side1 * side3))
+            angle3 = acos((side1**2 + side2**2 - side3**2) / (2 * side1 * side2))
+
+            
+            theta1 = atan2(Wr_C[1],Wr_C[0])
+            theta2 = pi/2 - angle1 - atan2(Wr_C[2] - 0.75, sqrt(Wr_C[0] * Wr_C[0] + Wr_C[1] * Wr_C[1]) - 0.35)
+            theta3 = pi/2 - (angle2 + 0.36)
+
+            # get first three trans matrics
+            R0_3 = T0_1[0:3,0:3] * T1_2[0:3,0:3] * T2_3[0:3,0:3]
+            R0_3 = R0_3.evalf(subs={q1:theta1, q2:theta2, q3:theta3})
+
+            # Last 3
+            R3_6 = R0_3.inv("LU") * ROT_EE
+
+            # Final Three thetas
+            theta4 = atan2(R3_6[2,2], -R3_6[0,2])
+            theta5 = atan2(sqrt(R3_6[0,2] * R3_6[0,2] + R3_6[2,2] * R3_6[2,2]), R3_6[1,2])
+            theta6 = atan2(-R3_6[1,1], R3_6[1,0])
 
 
-            #Set points to be on same plane
-            R_2 = R_C - D1
-            Z_2 = pz - D2
+            # This is all fake news but I spent so much time getting it wrong I felt like I should leave it
 
-            D2 = (px**2 + pz**2 - a1**2 - a2**2)/(2*a1*a2)
-            theta2 = atan2(D2, (1-D**2)**(1/2))
+            # L1 = 1.25 # Link lenght between joint 2 and 3
+            # L2 = 1.50097 # Link length between joint 3 and wrist center
+            # D1 = 0.35 # Distance between x axis and link 2
+            # D2 = 0.75 # Distance between z axis and link 2
+            # a1 = 0.09 # Link lenght between joint 1 and join 2
+            # a2 = L1+L2 # This is probably wrong
 
-            # uhh
-            D3 = (R_2**2 + Z_2**2 - L_1**2 - L_2**2)/(2 * L_1 * L_2)
-            theta3 = atan2((-sqrt(1-D3**2)),D3)
+
+            # #Set points to be on same plane
+            # R_2 = R_C - D1
+            # Z_2 = pz - D2
+
+            # D2 = (px**2 + pz**2 - a1**2 - a2**2)/(2*a1*a2)
+            # theta2 = atan2(D2, (1-D**2)**(1/2))
+
+            # # uhh
+            # D3 = (R_2**2 + Z_2**2 - L_1**2 - L_2**2)/(2 * L_1 * L_2)
+            # theta3 = atan2((-sqrt(1-D3**2)),D3)
 
 
 
